@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "author": "Nguyen Doan Minh Uyen",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-half", "id": "bb1", "top": -41.4, "left": -64.4, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -48, "left": -187.16, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": -74.4,
+      "left": -36.6,
+      "attrs": { "volume": "0.1" }
+    },
+    { "type": "wokwi-hc-sr04", "id": "ultrasonic1", "top": -84.9, "left": 139.9, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -68.5, "left": 57.4, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "bb1:4t.b", "bb1:bn.3", "black", [ "v0" ] ],
+    [ "bb1:14t.a", "bb1:bn.11", "black", [ "v0" ] ],
+    [ "ultrasonic1:VCC", "bb1:27t.a", "", [ "$bb" ] ],
+    [ "ultrasonic1:TRIG", "bb1:28t.a", "", [ "$bb" ] ],
+    [ "ultrasonic1:ECHO", "bb1:29t.a", "", [ "$bb" ] ],
+    [ "ultrasonic1:GND", "bb1:30t.a", "", [ "$bb" ] ],
+    [ "bz1:1", "bb1:4t.a", "", [ "$bb" ] ],
+    [ "bz1:2", "bb1:5t.a", "", [ "$bb" ] ],
+    [ "bb1:5t.b", "esp:15", "green", [ "v0" ] ],
+    [ "esp:3V3", "bb1:bp.2", "red", [ "h-19.05", "v201.6", "h180.8" ] ],
+    [ "esp:CMD", "bb1:bn.1", "black", [ "h-9.45", "v28.8", "h163.2" ] ],
+    [ "esp:34", "bb1:15t.c", "green", [ "h-28.65", "v182.4", "h316.8" ] ],
+    [ "bb1:16t.a", "bb1:bp.13", "red", [ "v0" ] ],
+    [ "bb1:27t.b", "esp:5V", "red", [ "v192", "h-393.6", "v-9.6" ] ],
+    [ "bb1:30t.b", "bb1:bn.25", "black", [ "v134.4" ] ],
+    [ "esp:25", "bb1:29t.c", "green", [ "h-38.25", "v192", "h451.2" ] ],
+    [ "bb1:28t.c", "esp:26", "green", [ "v201.6", "h-412.8", "v-163.2", "h9.6" ] ]
+  ],
+  "dependencies": {}
+}
