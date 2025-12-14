@@ -1,0 +1,40 @@
+# PlatformIO & Arduino
+.pio/
+.pioenvs/
+.piolibdeps/
+*.bin
+*.elf
+*.hex
+*.map
+
+# Python & Machine Learning (Backend)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+
+# VS Code 
+.vscode/
+*.code-workspace
+
+# Node-RED & Node.js
+# node_modules // nếu dùng thư viện bên ngoài nào thì uncomment dòng này
+package-lock.json
+*.backup
+*.log
+
+# OS / System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Secrets
+
+# Data
+*.csv
