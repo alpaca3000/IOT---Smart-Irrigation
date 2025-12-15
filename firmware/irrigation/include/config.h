@@ -14,6 +14,7 @@ const int MQTT_PORT = 1883;
 #define SOIL_PIN    34  
 #define TRIG_PIN 26
 #define ECHO_PIN 25
+#define RELAY_PIN 12
 
 // --- 3. MQTT Topics (Nên gom nhóm) ---
 // Thay 22120421 bằng ID của bạn

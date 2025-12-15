@@ -3,11 +3,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h> // Thư viện quan trọng để xử lý JSON
 #include "config.h"
-
-// --- 4. Ngưỡng tiêu chuẩn ---
-int auto_soil_min = 30; 
-int auto_temp_max = 80;     
-int auto_hum_min = 0;       
+      
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -21,6 +17,11 @@ int soilMoisture = 0;
 int waterLevel = 0;
 float temp = 0;
 float hum = 0;
+
+// --- Ngưỡng tiêu chuẩn ---
+int auto_soil_min = 30; 
+int auto_temp_max = 80;     
+int auto_hum_min = 0; 
 
 StaticJsonDocument<512> doc;
 
@@ -56,43 +57,46 @@ void callback(char* topic, byte* payload, unsigned int length) {
       return;
     }
 
-    // Lấy trường 'type' để xác định loại lệnh
-    const char* command_type = doc["type"] | "UNKNOWN";
-
-    // 2. Xử lý lệnh SETTING_CHANGE (Đặt ngưỡng tự động)
-    if (strcmp(command_type, "SETTING_CHANGE") == 0) {
-      auto_soil_min = doc["data"]["soil_min"] | 30;
-      auto_temp_max = doc["data"]["temp_max"] | 35;
-      auto_hum_min = doc["data"]["hum_min"] | 50;
+    // Chỉ xử lý msg từ chế độ Auto
+    const char* cmd = doc["command"]; // ON || OFF
+    const char* type = doc["type"];
+    if (strcmp(type, "AUTO") == 0){ //AUTO
+      int soil_max = doc["threshold"]["soil"];
+      int temp_max = doc["threshold"]["temp"];
+      int hum_min = doc["threshold"]["hum"];
+      
+      // Cập nhật ngưỡng cho chế độ tự động
+      auto_soil_min = doc["threshold"]["soil"];
+      auto_temp_max = doc["threshold"]["temp"];
+      auto_hum_min = doc["threshold"]["hum"];
 
       Serial.println(">> Updated Auto Watering Settings:");
       Serial.printf("   Soil Min: %d%%, Temp Max: %dC, Hum Min: %d%%\n", 
-                    auto_soil_min, auto_temp_max, auto_hum_min);
-
-    } 
-    // 3. Xử lý lệnh WATERING
-    else if (strcmp(command_type, "WATERING") == 0) {
-      int duration = doc["duration_s"] | 0; // Lấy thời gian tưới (s)
-      
-      if (duration > 0 && duration <= 60) { // Giới hạn tưới thủ công tối đa 60s
-        
-        Serial.printf(">> MANUAL WATERING started for %d seconds...\n", duration);
+                      auto_soil_min, auto_temp_max, auto_hum_min);
+      if (strcmp(cmd, "ON") == 0){
+        int duration = doc["duration"]; // xử lý trong node-red rồi gửi sang
+        Serial.printf(">> AUTO WATERING started for %d seconds...\n", duration);
         
         // Bật Bơm và Kêu Còi
         digitalWrite(BUZZER_PIN, HIGH); // Bật còi báo hiệu
-        // digitalWrite(LED_PIN, HIGH);    // Bật bơm (LED)
+        digitalWrite(RELAY_PIN, HIGH);    // Bật bơm (Relay)
         delay(500);                     // Kêu bíp 0.5s
         digitalWrite(BUZZER_PIN, LOW);   // Tắt còi
-
         delay(duration * 1000); 
-
         // Tắt Bơm
-        // digitalWrite(LED_PIN, LOW);
-        Serial.println(">> MANUAL WATERING finished.");
-      } else {
-         Serial.println(">> Invalid Watering Duration!");
+        digitalWrite(RELAY_PIN, LOW);
+        Serial.println(">> AUTO WATERING finished.");
       }
-    } 
+      else {
+        digitalWrite(RELAY_PIN, LOW); // Tắt bơm nếu lệnh OFF
+        Serial.println(">> AUTO WATERING stopped.");
+      }
+    }
+    else { //MANUAL
+      if (strcmp(cmd, "ON") == 0) digitalWrite(RELAY_PIN, HIGH);
+      else digitalWrite(RELAY_PIN, LOW);
+    }
+
   }
 }
 
@@ -140,6 +144,9 @@ void readAndPublishSensors() {
   StaticJsonDocument<200> doc;
   doc["soil"] = soilMoisture;
   doc["water"] = waterLevel;
+  doc["temp"] = temp;
+  doc["hum"] = hum;
+  doc["timestamp"] = millis();
 
   char buffer[256];
   serializeJson(doc, buffer);
@@ -192,6 +199,8 @@ void setup() {
   pinMode(SOIL_PIN, INPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
 
   setup_wifi();
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
