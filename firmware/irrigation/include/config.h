@@ -14,7 +14,7 @@ const int MQTT_PORT = 1883;
 #define SOIL_PIN    34  
 #define TRIG_PIN 26
 #define ECHO_PIN 25
-
+#define DHT_PIN 16 // Chân GPIO 16 được sử dụng để kết nối cảm biến DHT
 // --- 3. MQTT Topics (Nên gom nhóm) ---
 // Thay 22120421 bằng ID của bạn
 #define TOPIC_SENSOR_DATA   "irrigation/sensors"   // Gửi data (Độ ẩm, nước, nhiệt độ...)
