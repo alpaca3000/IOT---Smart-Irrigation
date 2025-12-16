@@ -3,6 +3,13 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h> // Thư viện quan trọng để xử lý JSON
 #include "config.h"
+#include "DHT.h"           // Thư viện DHT sensor
+#include <Adafruit_Sensor.h> // Thư viện Adafruit Sensor (DHT cần)
+
+// Định nghĩa chân cắm
+#define DHTPIN 16           
+#define DHTTYPE DHT22       
+DHT dht(DHTPIN, DHTTYPE);
 
 // --- 4. Ngưỡng tiêu chuẩn ---
 int auto_soil_min = 30; 
@@ -129,11 +136,23 @@ float getDistanceCm(){
 
 // --- Hàm giả lập đọc cảm biến & Detect Lỗi ---
 void readAndPublishSensors() {
-  // 1. Giả lập dữ liệu (Random)
-  soilMoisture = random(0, 100);      
-  waterLevel = 100 - getDistanceCm();  
-  temp = random(20, 90);               
-  hum = random(-5, 100);               
+  // 1. Đọc Nhiệt độ và độ ẩm kk
+  temp = dht.readTemperature();
+  hum = dht.readHumidity();
+
+  // Đọc Độ ẩm Đất 
+  int soilAnalog = analogRead(SOIL_PIN);
+  // Ánh xạ (Map) giá trị analog (Giả sử 4095=0%, 1500=100% cho ESP32)
+  soilMoisture = map(soilAnalog, 4095, 1500, 0, 100); 
+  soilMoisture = constrain(soilMoisture, 0, 100); 
+
+  // Đọc Mực nước 
+  waterLevel = 100 - getDistanceCm(); // waterLevel được tính từ khoảng cách
+
+  // Kiểm tra lỗi đọc DHT trước khi Publish
+  if (isnan(temp) || isnan(hum)) {
+    Serial.println(">>> ERROR: Failed to read from DHT sensor!");
+  }               
 
   // 2. Đóng gói JSON gửi Web (Data bình thường)
   // Format: {"soil": 65, "water": 80, "temp": 30, "hum": 70}
@@ -141,10 +160,19 @@ void readAndPublishSensors() {
   doc["soil"] = soilMoisture;
   doc["water"] = waterLevel;
 
+  // Chỉ thêm Nhiệt độ và Độ ẩm vào gói tin nếu giá trị hợp lệ
+  if (!isnan(temp)) { 
+    doc["temp"] = temp;
+  }
+  if (!isnan(hum)) { 
+    doc["hum"] = hum;
+  }
+
   char buffer[256];
   serializeJson(doc, buffer);
   mqttClient.publish(TOPIC_SENSOR_DATA, buffer);
   Serial.println("Published Sensor Data");
+  Serial.println(buffer);
 
   // Detect Lỗi 
   bool hasError = false;
@@ -192,6 +220,8 @@ void setup() {
   pinMode(SOIL_PIN, INPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  
+  dht.begin(); // Khởi tạo cảm biến DHT
 
   setup_wifi();
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
