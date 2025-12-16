@@ -13,7 +13,8 @@
       "attrs": { "volume": "0.1" }
     },
     { "type": "wokwi-hc-sr04", "id": "ultrasonic1", "top": -84.9, "left": 139.9, "attrs": {} },
-    { "type": "wokwi-potentiometer", "id": "pot1", "top": -68.5, "left": 57.4, "attrs": {} }
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -68.5, "left": 57.4, "attrs": {} },
+    { "type": "wokwi-dht", "id": "dht1", "top": 10.4, "left": 57.4, "attrs": { "model": "DHT22" } }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
