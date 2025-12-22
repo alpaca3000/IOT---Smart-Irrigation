@@ -42,7 +42,7 @@ Desktop.ini
 # nodered_flows
 *.json.backup
 .config.*
-flow_cred.json
+flows_cred.json
 uibuilder/.config/
 uibuilder/common/images/
 uibuilder/home/api/.keep
