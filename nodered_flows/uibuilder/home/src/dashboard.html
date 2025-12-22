@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Irrigation - Dashboard</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- HEADER BAR -->
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="./assets/logo.png" class="logo" alt="Plant Planet Logo">
+    </div>
+    <nav class="nav-right">
+      <a id="nav-home">Home</a>
+      <a id="nav-dashboard" class="active">Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="content"></main>
+
+  <script>
+    // Điều hướng cho nav
+    document.getElementById('nav-home').onclick = function() {
+      window.location.href = "index.html";
+    };
+    document.getElementById('nav-dashboard').onclick = function() {
+      window.location.href = "dashboard.html";
+    };
+  </script>
+  <script src="./uibuilder.iife.min.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

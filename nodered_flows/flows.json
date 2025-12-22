@@ -1,0 +1,337 @@
+[
+    {
+        "id": "c2bee6c445d2b842",
+        "type": "tab",
+        "label": "home_flow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "33348ec81cbe324d",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "8fd88c298088359e",
+        "type": "mqtt-broker",
+        "name": "sensor_to_web",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "84004303a41a409c",
+        "type": "mqtt-broker",
+        "name": "sensor_err_to_web",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "33b17218fabe43a1",
+        "type": "mqtt in",
+        "z": "c2bee6c445d2b842",
+        "name": "",
+        "topic": "irrigation/sensors",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "8fd88c298088359e",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 320,
+        "y": 240,
+        "wires": [
+            [
+                "be83f6c47f43fa16"
+            ]
+        ]
+    },
+    {
+        "id": "168b9892ac867570",
+        "type": "mqtt in",
+        "z": "c2bee6c445d2b842",
+        "name": "",
+        "topic": "irrigation/alert",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "84004303a41a409c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 330,
+        "y": 300,
+        "wires": [
+            [
+                "44c04f678daeeaa6"
+            ]
+        ]
+    },
+    {
+        "id": "be83f6c47f43fa16",
+        "type": "function",
+        "z": "c2bee6c445d2b842",
+        "name": "sensor_data",
+        "func": "msg.payload = {\n  type: \"sensors\",\n  data: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 240,
+        "wires": [
+            [
+                "a8aa4ef45198b245"
+            ]
+        ]
+    },
+    {
+        "id": "44c04f678daeeaa6",
+        "type": "function",
+        "z": "c2bee6c445d2b842",
+        "name": "sensor_err",
+        "func": "msg.payload = {\n    type: \"alert\",\n    data: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 300,
+        "wires": [
+            [
+                "a8aa4ef45198b245"
+            ]
+        ]
+    },
+    {
+        "id": "ee94902f3ec3ce40",
+        "type": "mqtt out",
+        "z": "c2bee6c445d2b842",
+        "name": "",
+        "topic": "irrigation/control",
+        "qos": "1",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8fd88c298088359e",
+        "x": 1220,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "ac868a10142081ad",
+        "type": "function",
+        "z": "c2bee6c445d2b842",
+        "name": "control_watering_now",
+        "func": "node.warn(msg);\nlet cmd = msg.cmd;\nlet duration_s = msg.duration_s;\n\n// tạo payload cho MQTT\nif (cmd === \"WATERING\") {\n    msg.topic = \"irrigation/control\";  // topic MQTT bạn muốn\n    msg.payload = JSON.stringify({ cmd: \"WATERING\", duration_s: duration_s });\n    return msg;\n}\n\nelse if (cmd === \"SETTING_CHANGE\"){\n    \n}\nreturn null; ",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 260,
+        "wires": [
+            [
+                "ee94902f3ec3ce40",
+                "057938371e90b8e3"
+            ]
+        ]
+    },
+    {
+        "id": "057938371e90b8e3",
+        "type": "debug",
+        "z": "c2bee6c445d2b842",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "a8aa4ef45198b245",
+        "type": "uibuilder",
+        "z": "c2bee6c445d2b842",
+        "name": "SmartIrrigation",
+        "topic": "",
+        "url": "home",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "7.5.0",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "editurl": "",
+        "x": 750,
+        "y": 260,
+        "wires": [
+            [
+                "ac868a10142081ad"
+            ],
+            []
+        ]
+    }
+]

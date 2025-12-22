@@ -1,0 +1,370 @@
+/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`
+ * This is optional but reasonably complete and allows for light/dark mode switching.
+ */
+@import url("../uibuilder/uib-brand.min.css");
+
+
+body {
+  margin: 0;
+  font-family: 'Inder', sans-serif;
+  background: #fff;
+}
+
+.navbar {
+  width: 100vmax;
+  padding: 20px 40px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-bottom: 2px solid #454545;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 120px;
+  height: 60px;
+  object-fit: fill;
+}
+
+.nav-right {
+  display: flex;
+  background: transparent;
+  gap: 48px;
+}
+
+.nav-right a {
+  font-size: 20px;
+  text-decoration: none;
+  font-weight: 400;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.nav-right a.active {
+  color: #181818;
+  font-weight: 700;
+}
+
+.welcome {
+  text-align: center;
+  margin: 32px 0 32px 0;
+}
+
+.welcome h1 {
+  font-size: 40px;
+  color: #181818;
+  font-weight: 600;
+}
+
+.main-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 40px;
+  padding: 0 32px 0 32px;
+}
+
+.panel-box {
+  background: #D8F3DC;
+  border-radius: 24px;
+  padding: 32px 0 32px 0;
+  max-width: 1200px;
+  margin: 0 auto 0 auto;
+  position: relative;
+  border: 3px solid black;
+}
+
+.watering-section,
+.sensor-section {
+  width: 45%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.watering-section h2,
+.sensor-section h2 {
+  font-size: 32px;
+  color: #181818;
+  margin-bottom: 20px; /* giảm khoảng cách dưới */
+  margin-top: 0;       /* không có khoảng cách trên */
+  text-align: center;
+  width: 100%;
+}
+
+.watering-card {
+  background: #fff;
+  border: 3px solid #181818;
+  border-radius: 24px;
+  padding: 20px 32px 20px 32px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mode-switch {
+  display: flex;
+  background: #D8F3DC; /*cái khung tròn bo quanh switch*/
+  border-radius: 40px;
+  padding: 6px;
+  margin-bottom: 10px;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+.mode-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  margin: 4px 4px; 
+  padding: 10px 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.mode-btn:hover {
+  background: none;
+  color: inherit;
+}
+
+.mode-btn.active {
+  background: #40916C;
+  color: #fff;
+  outline: none;
+  box-shadow: none;
+}
+
+.mode-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.row {
+  padding: 10px 40px;
+}
+
+.row-content {
+  display: flex;
+  font-size: 20px;
+  justify-content: space-between;
+  border-bottom: 1.5px solid #060606;
+  padding-bottom: 8px;
+}
+
+
+.primary-btn { /*nút change setting*/
+  width: 80%;
+  margin-left: 40px;
+  margin-top: 40px;
+  background: #60a183;
+  border: none;
+  border-radius: 40px;
+  padding: 18px 0;
+  font-size: 24px;
+  color: #fff;
+  font-family: 'Inder', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  transition: background 0.2s;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+}
+.primary-btn:hover {
+  background: #26704d;
+  outline: none;
+  box-shadow: none;
+}
+
+/* .last-watering {
+  margin: 24px auto 20px auto;
+  text-align: center;
+  font-size: 20px;
+  color: #181818;
+  max-width: 1700px;
+} */
+
+.hidden {
+  display: none;
+}
+
+/* .manual-img-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding-left: 40px;
+  padding-right: 40px;
+} */
+
+/* .manual-image {
+  width: 80%;
+  max-width: 220px;
+  border-radius: 18px;
+} */
+
+.sensor-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sensor-section h2 { /*tiêu đề sensor monitoring*/
+  font-size: 32px;
+  color: #181818;
+  margin-bottom: 20px;
+}
+
+.sensor-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.sensor-card {
+  background: #fff;
+  border: 3px solid #181818;
+  border-radius: 24px;
+  padding: 10px; /* tăng padding trên/dưới */
+  text-align: center;
+  font-size: 24px;
+  color: #181818;
+  min-height: 80px; /* tăng chiều cao tối thiểu */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sensor-card b {
+  display: block;
+  font-size: 28px;
+  margin-top: 10px;
+}
+
+.sensor-icons {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: -10px;
+}
+.sensor-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 140px;
+}
+
+.sensor-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #F2F6FF;
+  margin: auto;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 3px solid #000000;
+  overflow: visible;
+}
+
+.sensor-circle img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  display: block;
+  background: transparent;
+}
+
+.sensor-item p {
+  margin: 0;
+  margin-top: 14px; /* tăng khoảng cách với hình tròn */
+  text-align: center;
+  width: 100%;
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50px; /* tăng chiều cao chú thích */
+  line-height: 1.3;
+}
+
+.status-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: -2px;
+  right: 8px;
+  border: 2px solid #000000;
+  background: #F2F6FF;
+}
+.status-dot.normal {
+  background: #2ecc71;
+}
+.status-dot.error {
+  background: #e74c3c;
+}
+
+.manual-duration-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.duration-label {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.duration-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.duration-input {
+  width: 60px;
+  padding: 8px 4px;
+  font-size: 18px;
+  border: none;
+  border-bottom: 2px solid #181818;
+  border-radius: 0;
+  text-align: right;
+  margin-right: 4px;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.duration-input::-webkit-inner-spin-button,
+.duration-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.duration-input[type=number] {
+  -moz-appearance: textfield;
+}
