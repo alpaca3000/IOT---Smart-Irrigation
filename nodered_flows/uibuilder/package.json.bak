@@ -11,7 +11,7 @@
   "uibuilder": {
     "packages": {}
   },
-  "path": ".",
+  "path": "D:\\SmartIrrigation\\IOT---Smart-Irrigation\\nodered_flows\\uibuilder",
   "devDependencies": {},
   "peerDependencies": {},
   "_id": "uib_root@7.5.0",
