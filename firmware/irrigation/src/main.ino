@@ -165,10 +165,11 @@ void controlAndDisplayLCD() {
 void readAndPublishSensors() {
   temp = dht.readTemperature();
   hum = dht.readHumidity();
-  int soilAnalog = analogRead(SOIL_PIN);
+  int soilsensor = analogRead(SOIL_PIN);
+  int watersensor = analogRead(WATER_PIN);
   // Map giá trị cho ESP32 (0-4095)
-  soilMoisture = map(soilAnalog, 4095, 0, 0, 100); 
-  waterLevel = map(readDistanceCm(), 0, 400, 100, 0); // Giả lập mực nước dựa trên khoảng cách
+  soilMoisture = map(soilsensor, 1680, 3620, 0, 100); 
+  waterLevel = map(watersensor, 0, 4095, 0, 100);
 
   StaticJsonDocument<256> dataDoc;
   dataDoc["soil"] = soilMoisture;

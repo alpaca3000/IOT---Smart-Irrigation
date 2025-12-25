@@ -11,7 +11,8 @@ const int MQTT_PORT = 1883;
 // --- 2. Định nghĩa Chân (PIN) cho ESP8266 ---
 // Lưu ý sau: Wokwi dùng ESP32 thì giữ nguyên số, ESP8266 thì D1, D2...
 #define BUZZER_PIN  15 
-#define SOIL_PIN    34  
+#define SOIL_PIN    32  
+#define WATER_PIN 34
 #define TRIG_PIN 26
 #define ECHO_PIN 25
 #define RELAY_PIN 12
