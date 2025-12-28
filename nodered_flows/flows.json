@@ -375,7 +375,7 @@
         "expiry": "",
         "broker": "8fd88c298088359e",
         "x": 1720,
-        "y": 280,
+        "y": 260,
         "wires": []
     },
     {
@@ -383,50 +383,19 @@
         "type": "function",
         "z": "c2bee6c445d2b842",
         "name": "control_watering_now",
-        "func": "// KHỞI TẠO BIẾN\nvar mode = flow.get(\"mode\") || \"manual\"; \nvar soilLimit = Number(flow.get(\"soilLimit\")) || 30;\nvar humLimit  = Number(flow.get(\"humLimit\")) || 40;\nvar tempLimit = Number(flow.get(\"tempLimit\")) || 35;\nvar isPumping = flow.get(\"isPumping\") || false;\nvar mqttTopic = \"irrigation/control\"; \n\nvar manualState = flow.get(\"manualState\") || \"OFF\";\nvar lastSensors = flow.get(\"lastSensors\") || null;\nfunction getAutoDecision(s) {\n    if (!s) return \"OFF\"; \n    var curSoil = Number(s.soil);\n    var curHum  = Number(s.hum);\n    var curTemp = Number(s.temp);\n    \n    var needWater = (curSoil < soilLimit);\n    if (curHum < humLimit && curSoil < (soilLimit + 10)) needWater = true;\n    if (curTemp > tempLimit) return \"OFF\";\n\n    if (needWater) return \"ON\";\n    if (!needWater && curSoil > (soilLimit + 5)) return \"OFF\";\n    return \"KEEP\"; \n}\n\n// XỬ LÝ KHI WEB VỪA MỞ \nif (msg.topic === \"get_settings\") {\n    var currentSettings = {\n        soilLimit: soilLimit,\n        humLimit: humLimit,\n        tempLimit: tempLimit,\n        mode: mode\n    };\n    // Gửi về Web qua Cổng 2\n    return [null, { topic: \"current_settings\", payload: currentSettings }];\n}\nif (msg.topic === \"cmd_settings\") {\n    if (msg.payload.soilLimit !== undefined) flow.set(\"soilLimit\", Number(msg.payload.soilLimit));\n    if (msg.payload.humLimit !== undefined) flow.set(\"humLimit\", Number(msg.payload.humLimit));\n    if (msg.payload.tempLimit !== undefined) flow.set(\"tempLimit\", Number(msg.payload.tempLimit));\n    \n    // Hiện thông báo Debug\n    node.warn(`>>> ĐÃ LƯU SETTINGS: Soil ${msg.payload.soilLimit}% | Hum ${msg.payload.humLimit}% | Temp ${msg.payload.tempLimit}°C`);\n    \n    // Gửi xác nhận về Web \n    return [null, { topic: \"settings_saved\", payload: \"OK\" }];\n}\n\n// XỬ LÝ CHUYỂN CHẾ ĐỘ\nif (msg.topic === \"cmd_mode\") {\n    mode = msg.payload;\n    flow.set(\"mode\", mode);\n    var cmdToSend = \"OFF\";\n\n    if (mode === \"manual\") {\n        cmdToSend = flow.get(\"manualState\") || \"OFF\";\n        node.warn(`>> Chuyển Manual -> Khôi phục: ${cmdToSend}`);\n    } else {\n        var s = flow.get(\"lastSensors\");\n        if (s) {\n            var decision = getAutoDecision(s);\n            cmdToSend = (decision === \"KEEP\") ? (isPumping ? \"ON\" : \"OFF\") : decision;\n            node.warn(`>> Chuyển Auto -> Tính toán lại: ${cmdToSend}`);\n        } else {\n            cmdToSend = \"OFF\";\n        }\n    }\n    flow.set(\"isPumping\", (cmdToSend === \"ON\"));\n    return [{ topic: mqttTopic, payload: cmdToSend }, null];\n}\n\n// XỬ LÝ MANUAL\nif (msg.cmd === \"PUMP_ON\" || msg.cmd === \"PUMP_OFF\") {\n    var cmd = (msg.cmd === \"PUMP_ON\") ? \"ON\" : \"OFF\";\n    flow.set(\"manualState\", cmd); \n    if (mode === \"manual\") {\n        flow.set(\"isPumping\", (cmd === \"ON\"));\n        node.warn(\"MANUAL CLICK: \" + cmd);\n        return [{ topic: mqttTopic, payload: cmd }, null];\n    }\n    return null;\n}\n\n// XỬ LÝ AUTO SENSOR \nif (msg.payload && msg.payload.type === \"sensors\") {\n    var s = msg.payload.data;\n    flow.set(\"lastSensors\", s);\n    if (mode === \"manual\") return null;\n\n    var decision = getAutoDecision(s);\n    if (decision === \"ON\" && !isPumping) {\n        flow.set(\"isPumping\", true);\n        node.warn(\"AUTO: BẬT BƠM\");\n        return [{ topic: mqttTopic, payload: \"ON\" }, null];\n    }\n    if (decision === \"OFF\" && isPumping) {\n        flow.set(\"isPumping\", false);\n        node.warn(\"AUTO: TẮT BƠM\");\n        return [{ topic: mqttTopic, payload: \"OFF\" }, null];\n    }\n}\nreturn null;",
-        "outputs": 1,
+        "func": "// KHỞI TẠO BIẾN \nvar mode = flow.get(\"mode\") || \"manual\";\n// manualState: Lưu trạng thái nút bấm (ON/OFF)\nvar manualState = flow.get(\"manualState\") || \"OFF\";\n// isPumping: Lưu trạng thái thực tế bơm đang chạy hay không\nvar isPumping = flow.get(\"isPumping\") || false;\nvar mqttTopic = \"irrigation/control\";\n\n// Lấy cài đặt Auto\nvar soilLimit = Number(flow.get(\"soilLimit\")) || 30;\nvar humLimit = Number(flow.get(\"humLimit\")) || 40;\nvar tempLimit = Number(flow.get(\"tempLimit\")) || 35;\n\n// HÀM LOGIC AUTO \nfunction getAutoDecision(s) {\n    if (!s) return \"OFF\";\n    var curSoil = Number(s.soil);\n    var curHum = Number(s.hum);\n    var curTemp = Number(s.temp);\n\n    var needWater = (curSoil < soilLimit);\n    if (curHum < humLimit && curSoil < soilLimit) needWater = true;\n    if (curTemp > tempLimit) return \"OFF\";\n\n    if (needWater) return \"ON\";\n    if (!needWater) return \"OFF\";\n    return \"KEEP\";\n}\n\n// XỬ LÝ LỆNH TỪ NÚT BẤM (BUTTON CLICK)\nif (msg.cmd === \"PUMP_ON\" || msg.cmd === \"PUMP_OFF\") {\n    var cmd = (msg.cmd === \"PUMP_ON\") ? \"ON\" : \"OFF\";\n    // LƯU TRẠNG THÁI VÀO BỘ NHỚ\n    flow.set(\"manualState\", cmd);\n    // Debug: In ra để xem đã lưu chưa\n    node.warn(`[DEBUG CLICK] Đã lưu manualState: ${cmd}`);\n    if (mode === \"manual\") {\n        flow.set(\"isPumping\", (cmd === \"ON\"));\n        // Output 1: MQTT, Output 2: null\n        return [{ topic: mqttTopic, payload: cmd }, null];\n    }\n    return null;\n}\n\n// =XỬ LÝ CHUYỂN CHẾ ĐỘ\nif (msg.topic === \"cmd_mode\") {\n    mode = msg.payload;\n    flow.set(\"mode\", mode);\n    var cmdToSend = \"OFF\";\n\n    if (mode === \"manual\") {\n        // KHÔI PHỤC TRẠNG THÁI CŨ\n        cmdToSend = flow.get(\"manualState\") || \"OFF\";\n        node.warn(`[DEBUG MODE] Chuyển Manual -> Khôi phục lại: ${cmdToSend}`);\n    } else {\n        // TÍNH TOÁN AUTO\n        var s = flow.get(\"lastSensors\");\n        if (s) {\n            var decision = getAutoDecision(s);\n            cmdToSend = (decision === \"KEEP\") ? (isPumping ? \"ON\" : \"OFF\") : decision;\n        } else {\n            cmdToSend = \"OFF\";\n        }\n    }\n\n    flow.set(\"isPumping\", (cmdToSend === \"ON\"));\n\n    // Gửi cập nhật về UI để UI đổi chữ Watering/Stopped cho đúng\n    var uiUpdate = {\n        mode: mode,\n        pump: cmdToSend.toLowerCase()\n    };\n\n    return [{ topic: mqttTopic, payload: cmdToSend }, { topic: \"current_settings\", payload: uiUpdate }];\n}\n\n// XỬ LÝ SETTINGS\nif (msg.topic === \"cmd_settings\") {\n    if (msg.payload.soilLimit !== undefined) flow.set(\"soilLimit\", Number(msg.payload.soilLimit));\n    if (msg.payload.humLimit !== undefined) flow.set(\"humLimit\", Number(msg.payload.humLimit));\n    if (msg.payload.tempLimit !== undefined) flow.set(\"tempLimit\", Number(msg.payload.tempLimit));\n    return [null, { topic: \"settings_saved\", payload: \"OK\" }];\n}\n\n// XỬ LÝ LOAD LẠI TRANG (GET_SETTINGS)\nif (msg.topic === \"get_settings\") {\n    var displayPumpState = \"off\";\n    if (mode === \"manual\") {\n        // Lấy biến manualState, chuyển thành chữ thường 'on'/'off'\n        displayPumpState = (manualState || \"OFF\").toLowerCase();\n        node.warn(`[DEBUG LOAD] Đang Manual -> Trả về UI trạng thái cũ: ${displayPumpState}`);\n    } else {\n        displayPumpState = isPumping ? \"on\" : \"off\";\n    }\n    var responseData = {\n        settings: {\n            soilLimit: flow.get(\"soilLimit\") || 30,\n            humLimit: flow.get(\"humLimit\") || 40,\n            tempLimit: flow.get(\"tempLimit\") || 35\n        },\n        mode: mode,\n        pump: displayPumpState // 'on' hoặc 'off'\n    };\n    return [null, { topic: \"current_settings\", payload: responseData }];\n}\n\n// XỬ LÝ SENSOR\nif (msg.payload && msg.payload.type === \"sensors\") {\n    var s = msg.payload.data;\n    flow.set(\"lastSensors\", s);\n\n    if (mode === \"manual\") return null;\n\n    var decision = getAutoDecision(s);\n    if (decision === \"ON\" && !isPumping) {\n        flow.set(\"isPumping\", true);\n        return [{ topic: mqttTopic, payload: \"ON\" }, null];\n    }\n    if (decision === \"OFF\" && isPumping) {\n        flow.set(\"isPumping\", false);\n        return [{ topic: mqttTopic, payload: \"OFF\" }, null];\n    }\n}\n\nreturn null;",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 1440,
-        "y": 280,
+        "y": 260,
         "wires": [
             [
                 "ee94902f3ec3ce40",
-                "3d766b49df972104",
-                "0b9a0de5051b6c4d"
-            ]
-        ]
-    },
-    {
-        "id": "a8aa4ef45198b245",
-        "type": "uibuilder",
-        "z": "c2bee6c445d2b842",
-        "name": "SmartIrrigation",
-        "topic": "",
-        "url": "home",
-        "okToGo": true,
-        "fwdInMessages": false,
-        "allowScripts": false,
-        "allowStyles": false,
-        "copyIndex": true,
-        "templateFolder": "blank",
-        "extTemplate": "",
-        "showfolder": false,
-        "reload": false,
-        "sourceFolder": "src",
-        "deployedVersion": "7.5.0",
-        "showMsgUib": false,
-        "title": "",
-        "descr": "",
-        "editurl": "vscode://file/Users/tranhoangkimngan/CQ2022/25-26/HK1-2526/Nhập môn lập trình kết nối vạn vật/Đồ án/IOT---Smart-Irrigation/nodered_flows/uibuilder/home/?windowId=_blank",
-        "x": 1190,
-        "y": 320,
-        "wires": [
-            [
-                "ac868a10142081ad"
+                "3d766b49df972104"
             ],
             []
         ]
@@ -570,8 +539,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1640,
-        "y": 400,
+        "x": 1730,
+        "y": 360,
         "wires": [
             [
                 "47948fd488787946"
@@ -590,8 +559,8 @@
         "maxTimeMS": "0",
         "handleDocId": false,
         "name": "",
-        "x": 1850,
-        "y": 400,
+        "x": 1940,
+        "y": 360,
         "wires": [
             []
         ]
@@ -686,20 +655,56 @@
         ]
     },
     {
-        "id": "0b9a0de5051b6c4d",
-        "type": "debug",
+        "id": "a8aa4ef45198b245",
+        "type": "uibuilder",
         "z": "c2bee6c445d2b842",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1630,
-        "y": 120,
-        "wires": []
+        "name": "SmartIrrigation",
+        "topic": "",
+        "url": "home",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "7.5.0",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/Users/tranhoangkimngan/CQ2022/25-26/HK1-2526/Nhập môn lập trình kết nối vạn vật/Đồ án/IOT---Smart-Irrigation/nodered_flows/uibuilder/home/?windowId=_blank",
+        "x": 1190,
+        "y": 320,
+        "wires": [
+            [
+                "ac868a10142081ad",
+                "2aba95bd898f68f3"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "2aba95bd898f68f3",
+        "type": "function",
+        "z": "c2bee6c445d2b842",
+        "name": "function 1",
+        "func": "// Lấy context global\nvar globalContext = global;\n\n// 1. Lấy các giá trị đã lưu (nếu chưa có thì lấy mặc định)\nvar currentSettings = globalContext.get(\"irrigationSettings\") || { soilLimit: 30, humLimit: 40, tempLimit: 35 };\nvar currentMode = globalContext.get(\"systemMode\") || \"auto\"; // Mặc định là auto\nvar pumpStatus = globalContext.get(\"pumpStatus\") || \"off\";   // Mặc định là tắt\n\n// --- XỬ LÝ CÁC LỆNH TỪ UI GỬI XUỐNG ---\n\n// A. Lưu cài đặt (Settings)\nif (msg.topic === \"cmd_settings\") {\n    globalContext.set(\"irrigationSettings\", msg.payload);\n    msg.topic = \"settings_saved\";\n    return msg;\n}\n\n// B. Lưu chế độ (Auto/Manual) khi người dùng bấm chuyển tab\nif (msg.topic === \"cmd_mode\") {\n    globalContext.set(\"systemMode\", msg.payload);\n    return null; // Không cần phản hồi gì đặc biệt\n}\n\n// C. Lưu trạng thái máy bơm (Bật/Tắt) khi người dùng bấm Start/Stop\nif (msg.payload && msg.payload.cmd === \"PUMP_ON\") {\n    globalContext.set(\"pumpStatus\", \"on\");\n    return msg; // Cho tin nhắn đi tiếp để điều khiển phần cứng\n}\nif (msg.payload && msg.payload.cmd === \"PUMP_OFF\") {\n    globalContext.set(\"pumpStatus\", \"off\");\n    return msg;\n}\n\n// --- XỬ LÝ YÊU CẦU KHÔI PHỤC DỮ LIỆU (KHI LOAD TRANG) ---\nif (msg.topic === \"get_settings\") {\n    msg.topic = \"current_settings\";\n    // Gửi trả về tất cả: Cài đặt, Chế độ hiện tại, Trạng thái bơm\n    msg.payload = {\n        settings: currentSettings,\n        mode: currentMode,\n        pump: pumpStatus\n    };\n    return msg;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 580,
+        "wires": [
+            [
+                "a8aa4ef45198b245"
+            ]
+        ]
     },
     {
         "id": "012440536074a702",

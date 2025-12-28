@@ -41,12 +41,11 @@
           </div>
           <!-- AUTO MODE -->
           <div id="auto-panel">
-          
             <div class="row">
               <div class="row-content" style="align-items: center; justify-content: space-between;">
                 <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Soil Moisture</span>
                 <div style="display: flex; align-items: center;">
-                  <input type="number" v-model.number="settings.soilLimit" min="0" max="100"
+                  <input type="number" id="soil-min-input" min="0" max="100" value="30"
                          style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
                   <span style="margin-left: 5px;">%</span>
                 </div>
@@ -57,7 +56,7 @@
               <div class="row-content" style="align-items: center; justify-content: space-between;">
                 <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Humidity</span>
                 <div style="display: flex; align-items: center;">
-                  <input type="number" v-model.number="settings.humLimit" min="0" max="100"
+                  <input type="number" id="hum-min-input" min="0" max="100" value="40"
                          style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
                   <span style="margin-left: 5px;">%</span>
                 </div>
@@ -68,7 +67,7 @@
               <div class="row-content" style="align-items: center; justify-content: space-between;">
                 <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Temperature</span>
                 <div style="display: flex; align-items: center;">
-                  <input type="number" v-model.number="settings.tempLimit" min="0" max="50"
+                  <input type="number" id="temp-max-input" min="0" max="50" value="35"
                          style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
                   <span style="margin-left: 5px;">°C</span>
                 </div>
