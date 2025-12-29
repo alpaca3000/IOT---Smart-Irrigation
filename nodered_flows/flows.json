@@ -443,7 +443,7 @@
         "type": "function",
         "z": "c2bee6c445d2b842",
         "name": "Get data from MongoDB",
-        "func": "// Lấy dữ liệu từ MongoDB\nvar dbData = msg.payload;\nif (!dbData || !Array.isArray(dbData) || dbData.length === 0) {\n    node.warn(\"Chưa có dữ liệu từ Database hoặc định dạng sai!\");\n    return null;\n}\ndbData.sort(function (a, b) {\n    var dateA = new Date(a.timestamp || a.date);\n    var dateB = new Date(b.timestamp || b.date);\n    return dateA - dateB;\n});\n\nvar limitChart = 20; // Lấy 20 điểm\nvar recentData = dbData.slice(-limitChart);\n\nvar chartLabels = [];\nvar chartTemp = [];\nvar chartHum = [];\n\nrecentData.forEach(function (d) {\n    if (!d) return;\n    var dateVal = d.timestamp ? new Date(d.timestamp) : new Date();\n    var timeStr = dateVal.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });\n    var valTemp = d.temp || d.temperature || d.Temp || 0;\n    var valHum = d.hum || d.humidity || d.Hum || 0;\n\n    chartLabels.push(timeStr);\n    chartTemp.push(Number(valTemp)); \n    chartHum.push(Number(valHum));\n});\n\n// XỬ LÝ WATER LEVEL\nvar lastRecord = dbData[dbData.length - 1];\nvar rawWater = lastRecord ? (lastRecord.water || lastRecord.waterLevel || 0) : 0;\nvar maxTankCapacity = 500; \nvar percentLevel = Math.round((Math.abs(Number(rawWater)) / maxTankCapacity) * 100);\nif (percentLevel > 100) percentLevel = 100;\nif (percentLevel < 0) percentLevel = 0;\n\n// XỬ LÝ SOIL\nvar totalSoil = 0;\nvar count = 0;\nrecentData.forEach(function (d) {\n    // Kiểm tra tên biến soil hoặc moisture\n    var valSoil = d.soil || d.moisture || d.soilMoisture;\n    if (valSoil !== undefined) {\n        totalSoil += Number(valSoil);\n        count++;\n    }\n});\nvar avgSoil = count > 0 ? Math.round(totalSoil / count) : 0;\nmsg.payload = {\n    chart: {\n        labels: chartLabels,\n        temp: chartTemp,\n        hum: chartHum\n    },\n    water: percentLevel,\n    soil: avgSoil\n};\n\nreturn msg;",
+        "func": "// Lấy dữ liệu từ MongoDB\nvar dbData = msg.payload;\nif (!dbData || !Array.isArray(dbData) || dbData.length === 0) {\n    node.warn(\"Chưa có dữ liệu từ Database hoặc định dạng sai!\");\n    return null;\n}\ndbData.sort(function (a, b) {\n    var dateA = new Date(a.timestamp || a.date);\n    var dateB = new Date(b.timestamp || b.date);\n    return dateA - dateB;\n});\n\nvar limitChart = 20; // Lấy 20 điểm\nvar recentData = dbData.slice(-limitChart);\n\nvar chartLabels = [];\nvar chartTemp = [];\nvar chartHum = [];\n\nrecentData.forEach(function (d) {\n    if (!d) return;\n    var dateVal = d.timestamp ? new Date(d.timestamp) : new Date();\n    var timeStr = dateVal.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });\n    var valTemp = d.temp || d.temperature || d.Temp || 0;\n    var valHum = d.hum || d.humidity || d.Hum || 0;\n\n    chartLabels.push(timeStr);\n    chartTemp.push(Number(valTemp)); \n    chartHum.push(Number(valHum));\n});\n\n// XỬ LÝ WATER LEVEL\nvar lastRecord = dbData[dbData.length - 1];\nvar rawWater = lastRecord ? (lastRecord.water || lastRecord.waterLevel || 0) : 0;\nvar waterLevel = Math.round((Math.abs(Number(rawWater))));\n\n// XỬ LÝ SOIL\nvar totalSoil = 0;\nvar count = 0;\nrecentData.forEach(function (d) {\n    // Kiểm tra tên biến soil hoặc moisture\n    var valSoil = d.soil || d.moisture || d.soilMoisture;\n    if (valSoil !== undefined) {\n        totalSoil += Number(valSoil);\n        count++;\n    }\n});\nvar avgSoil = count > 0 ? Math.round(totalSoil / count) : 0;\nmsg.payload = {\n    chart: {\n        labels: chartLabels,\n        temp: chartTemp,\n        hum: chartHum\n    },\n    water: waterLevel,\n    soil: avgSoil\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 2,
@@ -655,6 +655,26 @@
         ]
     },
     {
+        "id": "2aba95bd898f68f3",
+        "type": "function",
+        "z": "c2bee6c445d2b842",
+        "name": "Restore settings",
+        "func": "// Lấy context global\nvar globalContext = global;\n\n//Lấy các giá trị đã lưu \nvar currentSettings = globalContext.get(\"irrigationSettings\") || { soilLimit: 30, humLimit: 40, tempLimit: 35 };\nvar currentMode = globalContext.get(\"systemMode\") || \"auto\"; // Mặc định là auto\nvar pumpStatus = globalContext.get(\"pumpStatus\") || \"off\";   // Mặc định là tắt\n\n// XỬ LÝ CÁC LỆNH TỪ UI GỬI XUỐNG\n\n// Lưu cài đặt\nif (msg.topic === \"cmd_settings\") {\n    globalContext.set(\"irrigationSettings\", msg.payload);\n    msg.topic = \"settings_saved\";\n    return msg;\n}\n\n// Lưu chế độ (Auto/Manual) khi người dùng bấm chuyển tab\nif (msg.topic === \"cmd_mode\") {\n    globalContext.set(\"systemMode\", msg.payload);\n    return null; // Không cần phản hồi gì đặc biệt\n}\n\n// Lưu trạng thái máy bơm (Bật/Tắt) khi người dùng bấm Start/Stop\nif (msg.payload && msg.payload.cmd === \"PUMP_ON\") {\n    globalContext.set(\"pumpStatus\", \"on\");\n    return msg; // Cho tin nhắn đi tiếp để điều khiển phần cứng\n}\nif (msg.payload && msg.payload.cmd === \"PUMP_OFF\") {\n    globalContext.set(\"pumpStatus\", \"off\");\n    return msg;\n}\n\nif (msg.topic === \"get_settings\") {\n    msg.topic = \"current_settings\";\n    // Gửi trả về tất cả: Cài đặt, Chế độ hiện tại, Trạng thái bơm\n    msg.payload = {\n        settings: currentSettings,\n        mode: currentMode,\n        pump: pumpStatus\n    };\n    return msg;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1200,
+        "y": 580,
+        "wires": [
+            [
+                "a8aa4ef45198b245"
+            ]
+        ]
+    },
+    {
         "id": "a8aa4ef45198b245",
         "type": "uibuilder",
         "z": "c2bee6c445d2b842",
@@ -684,26 +704,6 @@
                 "2aba95bd898f68f3"
             ],
             []
-        ]
-    },
-    {
-        "id": "2aba95bd898f68f3",
-        "type": "function",
-        "z": "c2bee6c445d2b842",
-        "name": "function 1",
-        "func": "// Lấy context global\nvar globalContext = global;\n\n// 1. Lấy các giá trị đã lưu (nếu chưa có thì lấy mặc định)\nvar currentSettings = globalContext.get(\"irrigationSettings\") || { soilLimit: 30, humLimit: 40, tempLimit: 35 };\nvar currentMode = globalContext.get(\"systemMode\") || \"auto\"; // Mặc định là auto\nvar pumpStatus = globalContext.get(\"pumpStatus\") || \"off\";   // Mặc định là tắt\n\n// --- XỬ LÝ CÁC LỆNH TỪ UI GỬI XUỐNG ---\n\n// A. Lưu cài đặt (Settings)\nif (msg.topic === \"cmd_settings\") {\n    globalContext.set(\"irrigationSettings\", msg.payload);\n    msg.topic = \"settings_saved\";\n    return msg;\n}\n\n// B. Lưu chế độ (Auto/Manual) khi người dùng bấm chuyển tab\nif (msg.topic === \"cmd_mode\") {\n    globalContext.set(\"systemMode\", msg.payload);\n    return null; // Không cần phản hồi gì đặc biệt\n}\n\n// C. Lưu trạng thái máy bơm (Bật/Tắt) khi người dùng bấm Start/Stop\nif (msg.payload && msg.payload.cmd === \"PUMP_ON\") {\n    globalContext.set(\"pumpStatus\", \"on\");\n    return msg; // Cho tin nhắn đi tiếp để điều khiển phần cứng\n}\nif (msg.payload && msg.payload.cmd === \"PUMP_OFF\") {\n    globalContext.set(\"pumpStatus\", \"off\");\n    return msg;\n}\n\n// --- XỬ LÝ YÊU CẦU KHÔI PHỤC DỮ LIỆU (KHI LOAD TRANG) ---\nif (msg.topic === \"get_settings\") {\n    msg.topic = \"current_settings\";\n    // Gửi trả về tất cả: Cài đặt, Chế độ hiện tại, Trạng thái bơm\n    msg.payload = {\n        settings: currentSettings,\n        mode: currentMode,\n        pump: pumpStatus\n    };\n    return msg;\n}\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1180,
-        "y": 580,
-        "wires": [
-            [
-                "a8aa4ef45198b245"
-            ]
         ]
     },
     {
