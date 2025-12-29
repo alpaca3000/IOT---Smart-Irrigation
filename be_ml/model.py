@@ -266,8 +266,6 @@ from tensorflow.keras.models import Model
 from sklearn.metrics import classification_report
 import joblib
 
-"""## a. SEPARATE AUTOENCODER MODELS"""
-
 def build_single_sensor_autoencoder(window_size=30, latent_dim=12):
     """
     Autoencoder cho 1 sensor.
@@ -381,7 +379,7 @@ def train_3_separate_autoencoders(
 
 ae_models, ae_scalers = train_3_separate_autoencoders(train_df)
 
-
+"""# 3. Đánh giá mô hình"""
 
 def calculate_3_thresholds(
     models,
@@ -412,7 +410,7 @@ def calculate_3_thresholds(
 
     thresholds = {}
 
-    # === Model 1: Air (temp + humid) ===
+    # Model 1: Air (temp + humid)
     print("\n### Model 1: Air (temp + humid) ###")
 
     # Prepare air data
@@ -436,7 +434,7 @@ def calculate_3_thresholds(
     print(f"  Mean error: {errors_air.mean():.6f}")
     print(f"  Std error:  {errors_air.std():.6f}")
 
-    # === Model 2: Soil ===
+    # Model 2: Soil
     print("\n### Model 2: Soil Moisture ###")
 
     soil_data = df_train[['soil_moisture']].values
@@ -455,7 +453,7 @@ def calculate_3_thresholds(
     print(f"  Mean error: {errors_soil.mean():.6f}")
     print(f"  Std error:  {errors_soil.std():.6f}")
 
-    # === Model 3: Water ===
+    # Model 3: Water
     print("\n### Model 3: Water Level ###")
 
     water_data = df_train[['water_level']].values
@@ -598,7 +596,6 @@ def inject_single_anomalies (data, err_type, anomaly_length = 5):
 
     data_anom = data.copy()
 
-    # đảm bảo start không quá 30, nhưng nếu anomaly_length = 30 thì có nghĩa là lỗi cả window
     if anomaly_length > 30:
         anomaly_length = 30
 
@@ -663,8 +660,8 @@ def detect_3sensors_faults(
 
     result = {}
 
-    # === Sensor 1: Air (temp + humid) ===
-    air_data = window[:, [0, 1]]  # temp_air, humidity_air
+    # Sensor 1: Air (temp + humid)
+    air_data = window[:, [0, 1]]
     air_scaled = scalers['air'].transform(air_data)
     air_recon = models['air'].predict(air_scaled[None, ...], verbose=0)[0]
     error_air = np.abs(air_scaled - air_recon).mean()
@@ -676,7 +673,7 @@ def detect_3sensors_faults(
         'severity': float(error_air / thresholds['air'])
     }
 
-    # === Sensor 2: Soil ===
+    # Sensor 2: Soil
     soil_data = window[:, [2]]  # soil_moisture
     soil_scaled = scalers['soil'].transform(soil_data)
     soil_recon = models['soil'].predict(soil_scaled[None, ...], verbose=0)[0]
@@ -689,7 +686,7 @@ def detect_3sensors_faults(
         'severity': float(error_soil / thresholds['soil'])
     }
 
-    # === Sensor 3: Water ===
+    # Sensor 3: Water
     water_data = window[:, [3]]  # water_level
     water_scaled = scalers['water'].transform(water_data)
     water_recon = models['water'].predict(water_scaled[None, ...], verbose=0)[0]
@@ -724,7 +721,7 @@ def scenarios_test_comprehensive(X_window, model_check_func=detect_3sensors_faul
     ALL_FEATURES = [0, 1, 2, 3] # Chỉ số các cột
     rng_test = np.random.default_rng(2025) # Seed mới cho kịch bản test
 
-    # --- 1. SCENARIO: NO FAULT (1 lần) ---
+    # SCENARIO: NO FAULT (1 lần)
     print("\n" + "="*80)
     print("1. KỊCH BẢN: KHÔNG LỖI")
     print("="*80)
@@ -735,7 +732,7 @@ def scenarios_test_comprehensive(X_window, model_check_func=detect_3sensors_faul
     print(f"Water: {result_no_fault['Water level']['fault']}")
 
 
-    # --- 2. SCENARIO: SINGLE SENSOR FAULTY (3 lần) ---
+    # SCENARIO: SINGLE SENSOR FAULTY (3 lần)
     print("\n" + "="*80)
     print("2. KỊCH BẢN: CHỈ 1 SENSOR LỖI (3 LẦN)")
     print("="*80)
@@ -767,7 +764,7 @@ def scenarios_test_comprehensive(X_window, model_check_func=detect_3sensors_faul
         print(f"Water: {result_1fault['Water level']['fault']}")
 
 
-    # --- 3. SCENARIO: TWO SENSORS FAULTY (3 lần) ---
+    # SCENARIO: TWO SENSORS FAULTY (3 lần)
     print("\n" + "="*80)
     print("3. KỊCH BẢN: 2 SENSOR LỖI (3 LẦN)")
     print("="*80)
@@ -793,7 +790,7 @@ def scenarios_test_comprehensive(X_window, model_check_func=detect_3sensors_faul
         print(f"Soil: {results_2faults['Soil moisture']['fault']}")
         print(f"Water: {results_2faults['Water level']['fault']}")
 
-    # --- 4. SCENARIO: THREE SENSORS FAULTY (3 lần) ---
+    # SCENARIO: THREE SENSORS FAULTY (3 lần)
     print("\n" + "="*80)
     print("4. KỊCH BẢN: 3 SENSOR LỖI (3 LẦN)")
     print("="*80)
@@ -818,6 +815,8 @@ def scenarios_test_comprehensive(X_window, model_check_func=detect_3sensors_faul
         print(f"Air: {results_3faults['Air (temp+humid)']['fault']}")
         print(f"Soil: {results_3faults['Soil moisture']['fault']}")
         print(f"Water: {results_3faults['Water level']['fault']}")
+
+"""# 3. Lưu mô hình"""
 
 def save_3models_system(models, scalers, thresholds):
     """
@@ -851,3 +850,5 @@ def save_3models_system(models, scalers, thresholds):
     print("     - water_scaler.joblib")
     print("   Thresholds:")
     print("     - thresholds.npy")
+
+save_3models_system(models, scalers, thresholds)
