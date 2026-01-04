@@ -10,7 +10,7 @@ new Vue({
             tempLimit: 35
         },
         historyData: [],
-        waterLevel: 0,
+        waterUsageMonth: 0,
         soilMoisture: 0,
         myChart: null
     },
@@ -19,6 +19,8 @@ new Vue({
         uibuilder.start({ 'serverPath': '/home' });
         this.initChart();
         uibuilder.send({ topic: "get_settings" });
+        // Request history data
+        uibuilder.send({ topic: "get_history" });
 
         uibuilder.onChange('msg', (msg) => {
             if (!msg.payload) return;
@@ -31,9 +33,13 @@ new Vue({
             if (msg.topic === "settings_saved") {
                 alert("Đã lưu cài đặt thành công!");
             }
-            if (msg.payload.table) this.historyData = msg.payload.table;
+            if (msg.topic === "history_table") {
+                console.log("Received history table:", msg.payload.table);
+                this.historyData = msg.payload.table;
+            }
+            if (msg.payload.table && !msg.topic) this.historyData = msg.payload.table;
             if (msg.payload.soil !== undefined) this.soilMoisture = msg.payload.soil;
-            if (msg.payload.water !== undefined) this.waterLevel = msg.payload.water;
+            if (msg.payload.waterUsageMonth !== undefined) this.waterUsageMonth = msg.payload.waterUsageMonth;
             if (msg.payload.chart && this.myChart) this.updateChart(msg.payload.chart);
         });
     },

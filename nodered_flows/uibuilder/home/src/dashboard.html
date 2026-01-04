@@ -180,7 +180,7 @@
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card-custom">
-                    <h5 class="card-title">Temperature and Humidity Chart (Last 7 Days)</h5>
+                    <h5 class="card-title">Temperature and Humidity Chart</h5>
                     <div class="chart-container">
                         <canvas id="myChart"></canvas>
                     </div>
@@ -218,22 +218,15 @@
                     
                     <div class="col-12 mb-4" style="height: 45%;">
                         <div class="card-custom d-flex flex-column justify-content-center">
-                            <h5 class="card-title mb-2">Water Level Monitor</h5>
+                            <h5 class="card-title mb-2">Water Usage (Last 1 month)</h5>
                             <div class="water-card-content">
                                 <div class="water-icon-area">
                                     <div style="font-size: 3.5rem;">💧</div>
                                 </div>
                                 <div class="water-value-area">
                                     <h2 class="font-weight-bold display-4 m-0">
-                                        {{ waterLevel }} <span style="font-size: 1.5rem">liters</span>
+                                        {{ waterUsageMonth }} <span style="font-size: 1.5rem">liters</span>
                                     </h2>
-                                    
-                                    <div v-if="waterLevel < 50" class="text-danger font-weight-bold mt-1" style="font-size: 1.1rem;">
-                                        ⚠️ Low Level!
-                                    </div>
-                                    <div v-else class="text-success font-weight-bold mt-1" style="font-size: 1.1rem;">
-                                        ✅ Normal
-                                    </div>
                                 </div>
                             </div>
                         </div>

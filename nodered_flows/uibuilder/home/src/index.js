@@ -1,7 +1,7 @@
 /// <reference path="../types/uibuilder.d.ts" />
 "use strict";
 
-// --- CẤU HÌNH DOM ---
+// CẤU HÌNH DOM 
 const btnAuto = document.getElementById("btn-auto");
 const btnManual = document.getElementById("btn-manual");
 const autoPanel = document.getElementById("auto-panel");
@@ -22,7 +22,36 @@ document.addEventListener("DOMContentLoaded", () => {
   uibuilder.onChange('msg', msg => {
     if (!msg || !msg.payload) return;
     if (msg.topic === "current_settings") {
+      // Update settings inputs
       if (msg.payload.settings) updateInputValues(msg.payload.settings);
+      
+      // Update mode and pump state from server
+      if (msg.payload.mode) {
+        const serverMode = msg.payload.mode;
+        localStorage.setItem(STORE_KEY_MODE, serverMode);
+        if (serverMode === "manual") {
+          setManualTab();
+        } else {
+          setAutoTab();
+        }
+        console.log(`[SERVER SYNC] Mode set to: ${serverMode}`);
+      }
+      
+      // Update pump state from server
+      if (msg.payload.pump !== undefined) {
+        const serverPump = msg.payload.pump; // 'on' or 'off'
+        localStorage.setItem(STORE_KEY_PUMP, serverPump);
+        if (statusText) {
+          if (serverPump === "on") {
+            statusText.innerText = "Watering...";
+            statusText.style.cssText = "color: #2ecc71 !important; font-weight: bold;";
+          } else {
+            statusText.innerText = "Stopped";
+            statusText.style.cssText = "color: #666 !important; font-weight: bold;";
+          }
+        }
+        console.log(`[SERVER SYNC] Pump state set to: ${serverPump}`);
+      }
     }
 
     if (msg.payload.type === "sensors") updateSensorUI(msg.payload.data);
@@ -35,13 +64,13 @@ function restoreFromLocalStorage() {
   const savedMode = localStorage.getItem(STORE_KEY_MODE) || "auto";
   const savedPump = localStorage.getItem(STORE_KEY_PUMP) || "off";
   console.log(`Khôi phục UI từ Local -> Mode: ${savedMode} | Pump: ${savedPump}`);
-  // 1. Set Tab
+  // Set Tab
   if (savedMode === "manual") {
     setManualTab();
   } else {
     setAutoTab();
   }
-  // 2. Set Status Text 
+  // Set Status Text 
   if (statusText) {
     if (savedPump === "on") {
       statusText.innerText = "Watering...";
@@ -73,14 +102,14 @@ const btnPumpOn = document.getElementById('btn-pump-on');
 if (btnPumpOn) {
   btnPumpOn.onclick = function () {
     console.log("Click START -> Lưu Local: ON");
-    // 1. Lưu biến cục bộ
+    // Lưu biến cục bộ
     localStorage.setItem(STORE_KEY_PUMP, "on");
-    // 2. Hiển thị ngay lập tức
+    // Hiển thị ngay lập tức
     if (statusText) {
       statusText.innerText = "Watering...";
       statusText.style.cssText = "color: #2ecc71 !important; font-weight: bold;";
     }
-    // 3. Gửi lệnh
+    // Gửi lệnh
     uibuilder.send({ cmd: "PUMP_ON" });
   };
 }
@@ -89,14 +118,14 @@ const btnPumpOff = document.getElementById('btn-pump-off');
 if (btnPumpOff) {
   btnPumpOff.onclick = function () {
     console.log("Click STOP -> Lưu Local: OFF");
-    // 1. Lưu biến cục bộ
+    // Lưu biến cục bộ
     localStorage.setItem(STORE_KEY_PUMP, "off");
-    // 2. Hiển thị ngay lập tức
+    // Hiển thị ngay lập tức
     if (statusText) {
       statusText.innerText = "Stopped";
       statusText.style.cssText = "color: #666 !important; font-weight: bold;";
     }
-    // 3. Gửi lệnh
+    // Gửi lệnh
     uibuilder.send({ cmd: "PUMP_OFF" });
   };
 }
