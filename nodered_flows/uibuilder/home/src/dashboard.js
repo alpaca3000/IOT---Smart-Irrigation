@@ -10,7 +10,7 @@ new Vue({
             tempLimit: 35
         },
         historyData: [],
-        waterLevel: 0,
+        waterUsageMonth: 0,
         soilMoisture: 0,
         myChart: null
     },
@@ -39,7 +39,7 @@ new Vue({
             }
             if (msg.payload.table && !msg.topic) this.historyData = msg.payload.table;
             if (msg.payload.soil !== undefined) this.soilMoisture = msg.payload.soil;
-            if (msg.payload.water !== undefined) this.waterLevel = msg.payload.water;
+            if (msg.payload.waterUsageMonth !== undefined) this.waterUsageMonth = msg.payload.waterUsageMonth;
             if (msg.payload.chart && this.myChart) this.updateChart(msg.payload.chart);
         });
     },
