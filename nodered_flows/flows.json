@@ -570,7 +570,7 @@
         "type": "function",
         "z": "c2bee6c445d2b842",
         "name": "Query Function",
-        "func": "// Cấu hình Query cho Node MongoDB - Filter by userid\nvar userid = flow.get('userid');\n\nif (!userid) {\n    return null;\n}\n\nmsg.payload = { useid: userid };  // Filter by user ID - CORRECTED: useid field\nmsg.sort = { \"_id\": -1 };\nmsg.limit = 500;\nmsg.projection = {\n    temp: 1,\n    hum: 1,\n    soil: 1,\n    water: 1,\n    timestamp: 1,\n    _id: 1\n};\n\nreturn msg;",
+        "func": "var userid = flow.get('userid');\n\nif (!userid) {\n    return null;\n}\n\nmsg.payload = { useid: userid };  \nmsg.sort = { \"_id\": -1 };\nmsg.limit = 500;\nmsg.projection = {\n    temp: 1,\n    hum: 1,\n    soil: 1,\n    water: 1,\n    timestamp: 1,\n    _id: 1\n};\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
