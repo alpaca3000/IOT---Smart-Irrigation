@@ -138,7 +138,7 @@ function setStatus(sensor, state) {
   const dot = document.getElementById(sensor + "-dot");
   if (!dot) return;
   dot.classList.remove("normal", "error");
-  if (state === "ok") dot.classList.add("normal");
+  if (state === "normal") dot.classList.add("normal");
   else if (state === "fault") dot.classList.add("error");
 }
 
