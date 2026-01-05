@@ -118,7 +118,7 @@ void controlAndDisplayLCD() {
     if (!isLcdBacklightOn) {
       lcd.backlight();
       isLcdBacklightOn = true;
-      lcd.clear();
+      lcd.clear(); // Xóa màn hình khi bắt đầu bật lại
     }
   } else {
     if (isLcdBacklightOn) {
@@ -129,16 +129,27 @@ void controlAndDisplayLCD() {
   }
 
   if (isLcdBacklightOn) {
+    // Dòng 0: Nhiệt độ & Độ ẩm không khí
     lcd.setCursor(0, 0);
-    lcd.print("T:"); lcd.print(temp, 1); lcd.print("C ");
+    lcd.print("T:"); lcd.print(temp, 1); lcd.print("C  "); 
     lcd.setCursor(10, 0);
-    lcd.print("H:"); lcd.print(hum, 1); lcd.print("%");
+    lcd.print("H:"); lcd.print(hum, 1); lcd.print("%  ");
+
+    // Dòng 1: Độ ẩm đất
     lcd.setCursor(0, 1);
-    lcd.print("Soil:"); lcd.print(soilMoisture); lcd.print("%");
+    lcd.print("Soil: ");
+    lcd.print(soilMoisture, 1); 
+    lcd.print("%    "); // 4 khoảng trắng để đảm bảo xóa sạch ký tự cũ phía sau
+
+    // Dòng 2: Mực nước
     lcd.setCursor(0, 2);
-    lcd.print("Water:"); lcd.print(waterLevel); lcd.print("%");
+    lcd.print("Water: ");
+    lcd.print(waterLevel, 1); 
+    lcd.print("%    ");
+
+    // Dòng 3: Trạng thái hệ thống
     lcd.setCursor(0, 3);
-    lcd.print("System Online");
+    lcd.print("System Online       ");
   }
 }
 
