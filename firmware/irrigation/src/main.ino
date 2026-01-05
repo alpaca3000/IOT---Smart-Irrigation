@@ -157,10 +157,12 @@ void readAndPublishSensors() {
   temp = dht.readTemperature();
   hum = dht.readHumidity();
   int soilsensor = analogRead(SOIL_PIN);
-  int watersensor = analogRead(WATER_PIN);
-  // Map giá trị cho ESP32 (0-4095)
   soilMoisture = (float)soilsensor/4095.0 * 100.0; 
+  soilMoisture = roundf(soilMoisture * 10) / 10.0;
+  
+  int watersensor = analogRead(WATER_PIN);
   waterLevel = (float)watersensor/4095.0 * 100.0;
+  waterLevel = roundf(waterLevel * 10) / 10.0;
 
   StaticJsonDocument<256> dataDoc;
   dataDoc["soil"] = soilMoisture;
