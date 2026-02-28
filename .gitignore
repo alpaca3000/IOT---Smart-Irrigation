@@ -17,6 +17,10 @@ env/
 venv/
 .venv/
 .env
+/be_ml/.gradio/
+/be_ml/sensor_env/
+/be_ml/__pycache__/
+/be_ml/Lib/
 
 # VS Code 
 .vscode/
@@ -38,3 +42,17 @@ Desktop.ini
 
 # Data
 *.csv
+
+# nodered_flows
+*.json.backup
+.config.*
+nodered_flows/flows_cred.json
+nodered_flows/uibuilder/.config/
+nodered_flows/uibuilder/common/images/
+nodered_flows/uibuilder/home/api/.keep
+nodered_flows/uibuilder/home/routes/.keep
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*

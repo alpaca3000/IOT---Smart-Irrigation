@@ -1,10 +1,42 @@
 #include <Arduino.h>
-#include <WiFi.h> // Nếu dùng ESP32 thì đổi thành <WiFi.h>
+#include <WiFi.h> 
 #include <PubSubClient.h>
-#include <ArduinoJson.h> // Thư viện quan trọng để xử lý JSON
-#include "config.h"
+#include <ArduinoJson.h> 
+#include "DHT.h"           
+#include <Adafruit_Sensor.h> 
+#include <LiquidCrystal_I2C.h>
 
-// --- 4. Ngưỡng tiêu chuẩn ---
+// --- Cấu hình WiFi & MQTT ---
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
+
+const char* MQTT_SERVER = "broker.hivemq.com";
+const int MQTT_PORT = 1883;
+
+// --- Định nghĩa Chân (PIN) cho ESP8266 ---
+#define BUZZER_PIN  15 
+#define SOIL_PIN    32  
+#define WATER_PIN 34
+#define TRIG_PIN 26
+#define ECHO_PIN 25
+#define RELAY_PIN 12
+
+#define DHT_PIN 16 // Chân GPIO 16 được sử dụng để kết nối cảm biến DHT
+#define LCD_ADDR 0x27 // Cấu hình LCD I2C
+#define LCD_COLS 20     
+#define LCD_ROWS 4      
+#define MAX_DISTANCE_CM 50 // Ngưỡng khoảng cách (nếu có người đến gần 50cm, màn hình bật)
+
+// --- Định nghĩa MQTT Topics ---
+#define TOPIC_SENSOR_DATA   "irrigation/sensors"   // Gửi data (Độ ẩm, nước, nhiệt độ...)
+#define TOPIC_CONTROL_PUMP  "irrigation/control"   // Nhận lệnh tưới
+#define TOPIC_ALERT_FAULT   "irrigation/alert"     // Gửi báo lỗi cảm biến
+DHT dht(DHT_PIN, DHT22); 
+LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
+
+bool isLcdBacklightOn = false; 
+
+// --- Ngưỡng tiêu chuẩn ---
 int auto_soil_min = 30; 
 int auto_temp_max = 80;     
 int auto_hum_min = 0;       
@@ -12,25 +44,19 @@ int auto_hum_min = 0;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-// Biến quản lý thời gian
 unsigned long lastMsgTime = 0;
-const long interval = 5000; // Gửi dữ liệu mỗi 5s
+const long interval = 5000; 
 
-// Biến lưu trạng thái giả lập
-int soilMoisture = 0;
-int waterLevel = 0;
+float soilMoisture = 0;
+float waterLevel = 0;
 float temp = 0;
 float hum = 0;
 
-StaticJsonDocument<512> doc;
+DynamicJsonDocument doc(512);
 
-// Hàm kết nối WiFi
 void setup_wifi() {
   delay(10);
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(WIFI_SSID);
-
+  Serial.println("\nConnecting to WiFi...");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -39,163 +65,144 @@ void setup_wifi() {
   Serial.println("\nWiFi connected");
 }
 
-// --- Hàm xử lý khi nhận lệnh từ Web ---
 void callback(char* topic, byte* payload, unsigned int length) {
+  String message = "";
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
   Serial.print("Message arrived [");
-  Serial.print(topic);
+  Serial.print(String(topic));
   Serial.print("]: ");
-
-  // 1. Kiểm tra topic là control
+  Serial.println(message);
   if (String(topic) == TOPIC_CONTROL_PUMP) {
-
-    DeserializationError error = deserializeJson(doc, payload, length);
-
-    if (error) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(100); 
+    digitalWrite(BUZZER_PIN, LOW);
+    if (message.indexOf("ON") >= 0) {
+      Serial.println(">> COMMAND: TURN PUMP ON");
+      digitalWrite(RELAY_PIN, HIGH); 
     }
-
-    // Lấy trường 'type' để xác định loại lệnh
-    const char* command_type = doc["type"] | "UNKNOWN";
-
-    // 2. Xử lý lệnh SETTING_CHANGE (Đặt ngưỡng tự động)
-    if (strcmp(command_type, "SETTING_CHANGE") == 0) {
-      auto_soil_min = doc["data"]["soil_min"] | 30;
-      auto_temp_max = doc["data"]["temp_max"] | 35;
-      auto_hum_min = doc["data"]["hum_min"] | 50;
-
-      Serial.println(">> Updated Auto Watering Settings:");
-      Serial.printf("   Soil Min: %d%%, Temp Max: %dC, Hum Min: %d%%\n", 
-                    auto_soil_min, auto_temp_max, auto_hum_min);
-
-    } 
-    // 3. Xử lý lệnh WATERING
-    else if (strcmp(command_type, "WATERING") == 0) {
-      int duration = doc["duration_s"] | 0; // Lấy thời gian tưới (s)
-      
-      if (duration > 0 && duration <= 60) { // Giới hạn tưới thủ công tối đa 60s
-        
-        Serial.printf(">> MANUAL WATERING started for %d seconds...\n", duration);
-        
-        // Bật Bơm và Kêu Còi
-        digitalWrite(BUZZER_PIN, HIGH); // Bật còi báo hiệu
-        // digitalWrite(LED_PIN, HIGH);    // Bật bơm (LED)
-        delay(500);                     // Kêu bíp 0.5s
-        digitalWrite(BUZZER_PIN, LOW);   // Tắt còi
-
-        delay(duration * 1000); 
-
-        // Tắt Bơm
-        // digitalWrite(LED_PIN, LOW);
-        Serial.println(">> MANUAL WATERING finished.");
-      } else {
-         Serial.println(">> Invalid Watering Duration!");
-      }
-    } 
+    else if (message.indexOf("OFF") >= 0) {
+      Serial.println(">> COMMAND: TURN PUMP OFF");
+      digitalWrite(RELAY_PIN, LOW);
+    }
   }
 }
 
-// --- Hàm kết nối lại MQTT ---
 void reconnect() {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    String clientId = "ESP8266Client-" + String(random(0xffff), HEX);
-    
+    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
     if (mqttClient.connect(clientId.c_str())) {
       Serial.println("connected");
-      // Đăng ký nhận lệnh điều khiển
       mqttClient.subscribe(TOPIC_CONTROL_PUMP);
     } else {
-      Serial.print("failed, rc=");
-      Serial.print(mqttClient.state());
-      Serial.println("Try again in 5 seconds");
       delay(5000);
     }
   }
 }
 
-float getDistanceCm(){
+long readDistanceCm() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
-
   long duration = pulseIn(ECHO_PIN, HIGH);
-  float distance = duration * 0.034 / 2; 
-  return distance;
+  return duration * 0.034 / 2;
 }
 
-// --- Hàm giả lập đọc cảm biến & Detect Lỗi ---
-void readAndPublishSensors() {
-  // 1. Giả lập dữ liệu (Random)
-  soilMoisture = random(0, 100);      
-  waterLevel = 100 - getDistanceCm();  
-  temp = random(20, 90);               
-  hum = random(-5, 100);               
+void controlAndDisplayLCD() {
+  long distance = readDistanceCm();
+  if (distance <= MAX_DISTANCE_CM) {
+    if (!isLcdBacklightOn) {
+      lcd.backlight();
+      isLcdBacklightOn = true;
+      lcd.clear(); // Xóa màn hình khi bắt đầu bật lại
+    }
+  } else {
+    if (isLcdBacklightOn) {
+      lcd.noBacklight();
+      isLcdBacklightOn = false;
+    }
+    return;
+  }
 
-  // 2. Đóng gói JSON gửi Web (Data bình thường)
-  // Format: {"soil": 65, "water": 80, "temp": 30, "hum": 70}
-  StaticJsonDocument<200> doc;
-  doc["soil"] = soilMoisture;
-  doc["water"] = waterLevel;
+  if (isLcdBacklightOn) {
+    // Dòng 0: Nhiệt độ & Độ ẩm không khí
+    lcd.setCursor(0, 0);
+    lcd.print("T:"); lcd.print(temp, 1); lcd.print("C  "); 
+    lcd.setCursor(10, 0);
+    lcd.print("H:"); lcd.print(hum, 1); lcd.print("%  ");
+
+    // Dòng 1: Độ ẩm đất
+    lcd.setCursor(0, 1);
+    lcd.print("Soil: ");
+    lcd.print(soilMoisture, 1); 
+    lcd.print("%    "); // 4 khoảng trắng để đảm bảo xóa sạch ký tự cũ phía sau
+
+    // Dòng 2: Mực nước
+    lcd.setCursor(0, 2);
+    lcd.print("Water: ");
+    lcd.print(waterLevel, 1); 
+    lcd.print("%    ");
+
+    // Dòng 3: Trạng thái hệ thống
+    lcd.setCursor(0, 3);
+    lcd.print("System Online       ");
+  }
+}
+
+void readAndPublishSensors() {
+  temp = dht.readTemperature();
+  hum = dht.readHumidity();
+  int soilsensor = analogRead(SOIL_PIN);
+  soilMoisture = (float)soilsensor/4095.0 * 100.0; 
+  soilMoisture = roundf(soilMoisture * 10) / 10.0;
+  
+  int watersensor = analogRead(WATER_PIN);
+  waterLevel = (float)watersensor/4095.0 * 100.0;
+  waterLevel = roundf(waterLevel * 10) / 10.0;
+
+  StaticJsonDocument<256> dataDoc;
+  dataDoc["soil"] = soilMoisture;
+  dataDoc["water"] = waterLevel;
+  if (!isnan(temp)) dataDoc["temp"] = temp;
+  if (!isnan(hum)) dataDoc["hum"] = hum;
 
   char buffer[256];
-  serializeJson(doc, buffer);
+  serializeJson(dataDoc, buffer);
   mqttClient.publish(TOPIC_SENSOR_DATA, buffer);
-  Serial.println("Published Sensor Data");
 
-  // Detect Lỗi 
-  bool hasError = false;
-  StaticJsonDocument<200> errDoc;
-  JsonArray error_sensors = errDoc.createNestedArray("sensors");
-  // Lỗi Nhiệt độ 
-  if (temp > auto_temp_max) {
-    error_sensors.add("temperature_humidity"); 
-  }
-  
-  // Lỗi Độ ẩm không khí
-  if (hum < auto_hum_min || hum > 100) {
-    error_sensors.add("temperature_humidity");
-  }
-  
-  // Lỗi Độ ẩm đất 
-  if (soilMoisture == 0 || soilMoisture == 100) { 
-     error_sensors.add("soil_moisture");
-  }
-  
-  // Lỗi Mực nước
-  if (waterLevel < 0) { 
-     error_sensors.add("water_level");
-  }
-
-  // --- 2. Publish nếu có lỗi ---
-  if (error_sensors.size() > 0) {    
-    errDoc["type"] = "SENSOR_FAULT";
-    errDoc["timestamp"] = millis();
-
-    char errBuffer[256];
-    serializeJson(errDoc, errBuffer);
-    mqttClient.publish(TOPIC_ALERT_FAULT, errBuffer);
-    Serial.printf("FAULT DETECTED on %d sensors & SENT: %s\n", error_sensors.size(), errBuffer);
-  }
-  
-  // Xóa tài liệu JSON sau khi gửi (hoặc để PIO tự quản lý nếu khai báo local)
-  errDoc.clear();
-
+  // In dữ liệu sensor ra Serial để kiểm tra
+  Serial.print("SENSOR DATA: ");
+  Serial.println(buffer);
 }
 
+// --- 4. Setup & Loop ---
 void setup() {
   Serial.begin(9600);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(SOIL_PIN, INPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+  
+  dht.begin();
+  lcd.init();
+  lcd.backlight();
+  lcd.print("Booting...");
 
   setup_wifi();
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(callback);
+  
+  lcd.clear();
+  lcd.noBacklight();
+  // resolver.AddUnidirectionalSequenceLSTM(); 
+  // resolver.AddFullyConnected();
+  // resolver.AddReshape();
 }
 
 void loop() {
@@ -203,6 +210,8 @@ void loop() {
     reconnect();
   }
   mqttClient.loop();
+  
+  controlAndDisplayLCD();
 
   unsigned long now = millis();
   if (now - lastMsgTime > interval) {

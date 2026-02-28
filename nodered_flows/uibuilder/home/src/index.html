@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Plant Planet - Smart Irrigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inder&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <!-- HEADER BAR -->
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="./assets/logo.png" class="logo" alt="Plant Planet Logo">
+    </div>
+    <nav class="nav-right">
+      <a id="nav-home" class="nav-link active">Home</a>
+      <a id="nav-dashboard" class="nav-link">Dashboard</a>
+    </nav>
+  </header>
+
+  <!-- WELCOME -->
+  <div class="welcome">
+    <h1>Welcome back!</h1>
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div class="panel-box">
+    <div class="main-panel">
+      <!-- LEFT: WATERING CONTROL -->
+      <section class="watering-section">
+        <h2>Watering Control</h2>
+        <div class="watering-card">
+          <div class="mode-switch">
+            <button id="btn-auto" class="mode-btn active">Auto</button>
+            <button id="btn-manual" class="mode-btn">Manual</button>
+          </div>
+          <!-- AUTO MODE -->
+          <div id="auto-panel">
+            <div class="row">
+              <div class="row-content" style="align-items: center; justify-content: space-between;">
+                <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Soil Moisture</span>
+                <div style="display: flex; align-items: center;">
+                  <input type="number" id="soil-min-input" min="0" max="100" value="30"
+                         style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
+                  <span style="margin-left: 5px;">%</span>
+                </div>
+              </div>
+            </div>
+          
+            <div class="row">
+              <div class="row-content" style="align-items: center; justify-content: space-between;">
+                <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Humidity</span>
+                <div style="display: flex; align-items: center;">
+                  <input type="number" id="hum-min-input" min="0" max="100" value="40"
+                         style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
+                  <span style="margin-left: 5px;">%</span>
+                </div>
+              </div>
+            </div>
+          
+            <div class="row">
+              <div class="row-content" style="align-items: center; justify-content: space-between;">
+                <span style="font-weight: 400; color: #333; font-size: 1.1rem;">Temperature</span>
+                <div style="display: flex; align-items: center;">
+                  <input type="number" id="temp-max-input" min="0" max="50" value="35"
+                         style="width: 50px; border: none; border-bottom: 2px solid #333; background: transparent; text-align: center; font-size: 1.1rem; font-family: 'Inder', sans-serif; color: #1e3a8a;">
+                  <span style="margin-left: 5px;">°C</span>
+                </div>
+              </div>
+            </div>
+          <button class="primary-btn" @click="saveSettings">Change settings</button>
+          </div>
+          <!-- MANUAL MODE -->
+          <div id="manual-panel" class="hidden control-panel-wrap">
+            <div class="status-indicator mb-4">
+              <span style="color: #666; font-size: 1.1rem;">Status: </span>
+              <span id="manual-status-text" style="font-weight: 600; color: #40916C;">Ready to water</span>
+            </div>
+
+            <div class="manual-btn-group">
+              <button id="btn-pump-on" class="ctrl-btn start-btn">
+                <span style="font-size: 1.2rem;">▶</span> <span>START</span>
+              </button>
+
+              <button id="btn-pump-off" class="ctrl-btn stop-btn">
+                <span style="font-size: 1.8rem; line-height: 1; margin-top: -4px;">■</span> 
+                <span>STOP</span>
+              </button>
+            </div>
+
+            <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">
+              *Click Start to turn on the pump indefinitely. <br>
+              Remember to Stop it!
+            </p>
+          </div>
+        </div>
+      </section>
+      <!-- RIGHT: SENSOR MONITORING -->
+      <section class="sensor-section">
+        <h2>Sensor Monitoring</h2>
+        <div class="sensor-cards">
+          <div class="sensor-card">
+            <div>Temperature</div><b id="temp-sensor-value">--°C</b>
+          </div>
+          <div class="sensor-card">
+            <div>Humidity</div><b id="hum-sensor-value">--%</b>
+          </div>
+          <div class="sensor-card">
+            <div>Moisture</div><b id="soil-sensor-value">--%</b>
+          </div>
+          <div class="sensor-card">
+            <div>Water Level</div><b id="water-sensor-value">--L</b>
+          </div>
+        </div>
+        <div class="sensor-icons">
+          <div class="sensor-item">
+            <div class="sensor-circle">
+              <img src="./assets/temp_humi.png" alt="Temperature humidity sensor">
+              <span class="status-dot" id="air-dot"></span>
+            </div>
+            <p>Temperature<br>humidity sensor</p>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-circle">
+              <img src="./assets/water_level.png" alt="Water level sensor">
+              <span class="status-dot" id="water-dot"></span>
+            </div>
+            <p>Water level<br>sensor</p>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-circle">
+              <img src="./assets/soil.png" alt="Soil Moisture sensor">
+              <span class="status-dot" id="soil-dot"></span>
+            </div>
+            <p>Soil Moisture<br>sensor</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    // Điều hướng cho nav
+document.getElementById('nav-home').onclick = function() {
+// Đánh dấu active
+document.getElementById('nav-home').classList.add('active');
+document.getElementById('nav-dashboard').classList.remove('active');
+// Chuyển trang nếu chưa ở trang này
+if (!window.location.pathname.endsWith('index.html')) {
+window.location.href = "index.html";
+}
+};
+document.getElementById('nav-dashboard').onclick = function() {
+document.getElementById('nav-dashboard').classList.add('active');
+document.getElementById('nav-home').classList.remove('active');
+window.location.href = "dashboard.html";
+};
+  </script>
+  <script src="./uibuilder.iife.min.js"></script>
+  <script src="./index.js"></script>
+</body>
+
+</html>
